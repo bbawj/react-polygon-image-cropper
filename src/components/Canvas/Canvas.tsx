@@ -28,7 +28,7 @@ interface CanvasProps {
   styles?: React.CSSProperties;
 }
 
-export const Canvas = ({
+const Canvas = ({
   width,
   height,
   source,
@@ -94,7 +94,7 @@ export const Canvas = ({
     if (saveProps) {
       const saveRef = saveProps.saveRef;
       const handleSave = () => {
-        const imageUrl = finalCanvasRef.current?.toDataURL();
+        const imageUrl = finalCanvasRef.current?.toDataURL('image/png');
         if (imageUrl) {
           saveProps.saveCallback(imageUrl);
         }
@@ -110,17 +110,18 @@ export const Canvas = ({
   useEffect(() => {
     const canvas = imageCanvasRef.current;
     if (canvas !== null) {
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
       const context = canvas.getContext('2d');
       const image = new Image();
       image.onload = function () {
+        context!.imageSmoothingEnabled = false;
         context!.drawImage(
           image,
           0,
           0,
-          image.width,
-          image.height,
+          image.width * window.devicePixelRatio,
+          image.height * window.devicePixelRatio,
           0,
           0,
           canvas.width,
@@ -138,13 +139,17 @@ export const Canvas = ({
   }, []);
 
   useEffect(() => {
-    const handleCanvas = cropCanvasRef.current;
-    if (handleCanvas !== null) {
-      const handleContext = handleCanvas.getContext('2d');
-      handleContext!.clearRect(0, 0, handleCanvas.width, handleCanvas.height);
-      handles.forEach((_, idx) => drawLine(handles, idx, handleContext));
+    const cropCanvas = cropCanvasRef.current;
+    if (cropCanvas !== null) {
+      const cropContext = cropCanvas.getContext('2d');
+      if (cropped) {
+        cropImage(imageCanvasRef, cropCanvasRef, handles);
+      } else {
+        cropContext!.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+        handles.forEach((_, idx) => drawLine(handles, idx, cropContext));
+      }
     }
-  }, [handles]);
+  }, [handles, cropped]);
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
@@ -171,11 +176,13 @@ export const Canvas = ({
       className="react-polygon-bounding-box"
       style={{ height: height, width: width, ...styles }}>
       <canvas
-        hidden={cropped}
+        style={{ height: height, width: width }}
         className="react-polygon-image-canvas"
+        hidden={cropped}
         ref={imageCanvasRef}
       />
       <canvas
+        style={{ height: height, width: width }}
         className="react-polygon-crop-canvas"
         ref={cropCanvasRef}
         onClick={handleClick}
@@ -187,10 +194,12 @@ export const Canvas = ({
           idx={idx}
           {...handle}
           updateHandles={updateHandles}
-          draggable={draggable}
+          draggable={true}
           cropCanvasRef={cropCanvasRef}
         />
       ))}
     </div>
   );
 };
+
+export default Canvas;

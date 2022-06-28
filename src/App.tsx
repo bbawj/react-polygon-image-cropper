@@ -6,18 +6,19 @@ function App() {
   const [crop, setCrop] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [reset, setReset] = useState(false);
+  const [url, setUrl] = useState('');
   const buttonRef = useRef(null);
   const resetRef = useRef(null);
   const confirmRef = useRef(null);
   const saveRef = useRef(null);
-  const saveCallback = (imageUrl: any) => console.log(imageUrl);
+  const saveCallback = (imageUrl: any) => setUrl(imageUrl);
   return (
     <div className="App">
       <Canvas
         width={500}
         height={500}
         source="https://avatars.githubusercontent.com/u/53790951?v=4"
-        radius={50}
+        radius={30}
         color="red"
         cropRef={buttonRef}
         rescaleRef={confirmRef}
@@ -31,12 +32,13 @@ function App() {
       />
       <button ref={buttonRef}>Crop</button>
       <button ref={confirmRef} onClick={() => setConfirm(true)}>
-        Confirm
+        Rescale
       </button>
       <button ref={resetRef} onClick={() => setReset(true)}>
         Reset
       </button>
       <button ref={saveRef}>Save</button>
+      <div style={{ wordBreak: 'break-all' }}>{url}</div>
     </div>
   );
 }
