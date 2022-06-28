@@ -12,11 +12,13 @@ interface ComponentProps extends HandleProps {
   idx: number;
   updateHandles: (idx: number, x: number, y: number) => void;
   draggable: boolean;
+  cropCanvasRef: React.RefObject<HTMLCanvasElement>;
 }
 export const Handle = ({
   idx,
   updateHandles,
   draggable,
+  cropCanvasRef,
   x,
   y,
   radius,
@@ -27,16 +29,26 @@ export const Handle = ({
     y: y - radius / 2,
   });
 
+  const calculateNewHandlePosition = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = cropCanvasRef?.current?.getBoundingClientRect();
+    let newX = e.clientX;
+    let newY = e.clientY;
+    if (rect) {
+      newX -= rect.left;
+      newY -= rect.top;
+    }
+    updateHandles(idx, newX, newY);
+    setCenter({ x: newX - radius / 2, y: newY - radius / 2 });
+  };
+
   const handleDrag = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    updateHandles(idx, e.clientX, e.clientY);
-    setCenter({ x: e.clientX - radius / 2, y: e.clientY - radius / 2 });
+    calculateNewHandlePosition(e);
   };
 
   const handleDragEnd = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    updateHandles(idx, e.clientX, e.clientY);
-    setCenter({ x: e.clientX - radius / 2, y: e.clientY - radius / 2 });
+    calculateNewHandlePosition(e);
   };
 
   return (

@@ -18,8 +18,13 @@ function App() {
         radius={50}
         color="red"
         cropRef={buttonRef}
-        confirmRef={confirmRef}
+        rescaleRef={confirmRef}
         resetRef={resetRef}
+        styles={{
+          border: '1px solid red',
+          display: 'flex',
+          alignItems: 'center',
+        }}
       />
       <button ref={buttonRef}>Crop</button>
       <button ref={confirmRef} onClick={() => setConfirm(true)}>

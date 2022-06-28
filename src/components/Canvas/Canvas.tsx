@@ -18,7 +18,9 @@ interface CanvasProps {
   proximity?: number;
   cropRef?: React.RefObject<HTMLElement>;
   resetRef?: React.RefObject<HTMLElement>;
-  confirmRef?: React.RefObject<HTMLElement>;
+  rescaleRef?: React.RefObject<HTMLElement>;
+  saveRef?: React.RefObject<HTMLElement>;
+  styles?: React.CSSProperties;
 }
 
 export const Canvas = ({
@@ -30,22 +32,22 @@ export const Canvas = ({
   proximity,
   cropRef,
   resetRef,
-  confirmRef,
+  rescaleRef,
+  saveRef,
+  styles,
 }: CanvasProps) => {
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const cropCanvasRef = useRef<HTMLCanvasElement>(null);
   const finalCanvasRef = useRef<HTMLCanvasElement>(null);
   const [handles, setHandles] = useState<Array<HandleProps>>([]);
   const [draggable, setDraggable] = useState(true);
-  const [hidden, setHidden] = useState(false);
   const [cropped, setCropped] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
+  const [scaled, setScaled] = useState(false);
 
   useEffect(() => {
     const handleCrop = () => {
       cropImage(imageCanvasRef, cropCanvasRef, handles);
       setDraggable(false);
-      setHidden(true);
       setCropped(true);
     };
     if (cropRef && cropRef.current) {
@@ -59,9 +61,9 @@ export const Canvas = ({
       clearCanvas(cropCanvasRef);
       clearCanvas(finalCanvasRef);
       setHandles([]);
-      setHidden(false);
+      setCropped(false);
       setDraggable(true);
-      setConfirmed(false);
+      setScaled(false);
     };
     if (resetRef && resetRef.current) {
       resetRef.current.addEventListener('click', handleReset);
@@ -70,19 +72,28 @@ export const Canvas = ({
   }, [resetRef]);
 
   useEffect(() => {
-    const handleConfirm = () => {
-      if (!confirmed) {
+    const handleScale = () => {
+      if (!scaled) {
         redrawCropped(handles, cropCanvasRef, finalCanvasRef);
         setHandles([]);
-        setConfirmed(true);
+        setScaled(true);
       }
     };
-    if (confirmRef && confirmRef.current) {
-      confirmRef.current.addEventListener('click', handleConfirm);
+    if (rescaleRef && rescaleRef.current) {
+      rescaleRef.current.addEventListener('click', handleScale);
     }
-    return () =>
-      confirmRef?.current?.removeEventListener('click', handleConfirm);
-  }, [confirmRef, handles, confirmed]);
+    return () => rescaleRef?.current?.removeEventListener('click', handleScale);
+  }, [rescaleRef, handles, scaled]);
+
+  useEffect(() => {
+    const handleSave = () => {
+      finalCanvasRef.current?.toDataURL();
+    };
+    if (saveRef && saveRef.current) {
+      saveRef.current.addEventListener('click', handleSave);
+    }
+    return () => rescaleRef?.current?.removeEventListener('click', handleSave);
+  }, [saveRef]);
 
   useEffect(() => {
     const canvas = imageCanvasRef.current;
@@ -125,11 +136,11 @@ export const Canvas = ({
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    const handleCanvas = cropCanvasRef.current;
-    const rect = handleCanvas!.getBoundingClientRect();
+    const cropCanvas = cropCanvasRef.current;
+    const rect = cropCanvas!.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    if (!checkProximity(handles, { x: x, y: y }, proximity || 0) && !hidden) {
+    if (!checkProximity(handles, { x: x, y: y }, proximity || 0) && !cropped) {
       setHandles((prev) => [
         ...prev,
         { x: x, y: y, radius: radius, color: color },
@@ -146,9 +157,9 @@ export const Canvas = ({
   return (
     <div
       className="react-polygon-bounding-box"
-      style={{ height: height, width: width }}>
+      style={{ height: height, width: width, ...styles }}>
       <canvas
-        hidden={hidden}
+        hidden={cropped}
         className="react-polygon-image-canvas"
         ref={imageCanvasRef}
       />
@@ -165,6 +176,7 @@ export const Canvas = ({
           {...handle}
           updateHandles={updateHandles}
           draggable={draggable}
+          cropCanvasRef={cropCanvasRef}
         />
       ))}
     </div>
