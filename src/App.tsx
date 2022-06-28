@@ -9,6 +9,8 @@ function App() {
   const buttonRef = useRef(null);
   const resetRef = useRef(null);
   const confirmRef = useRef(null);
+  const saveRef = useRef(null);
+  const saveCallback = (imageUrl: any) => console.log(imageUrl);
   return (
     <div className="App">
       <Canvas
@@ -20,6 +22,7 @@ function App() {
         cropRef={buttonRef}
         rescaleRef={confirmRef}
         resetRef={resetRef}
+        saveProps={{ saveRef, saveCallback }}
         styles={{
           border: '1px solid red',
           display: 'flex',
@@ -33,6 +36,7 @@ function App() {
       <button ref={resetRef} onClick={() => setReset(true)}>
         Reset
       </button>
+      <button ref={saveRef}>Save</button>
     </div>
   );
 }

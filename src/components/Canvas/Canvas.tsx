@@ -9,6 +9,11 @@ import {
   redrawCropped,
 } from '../../utils';
 
+interface SaveProps {
+  saveRef: React.RefObject<HTMLElement>;
+  saveCallback: (imageUrl: string) => any;
+}
+
 interface CanvasProps {
   width: number;
   height: number;
@@ -19,7 +24,7 @@ interface CanvasProps {
   cropRef?: React.RefObject<HTMLElement>;
   resetRef?: React.RefObject<HTMLElement>;
   rescaleRef?: React.RefObject<HTMLElement>;
-  saveRef?: React.RefObject<HTMLElement>;
+  saveProps?: SaveProps;
   styles?: React.CSSProperties;
 }
 
@@ -33,7 +38,7 @@ export const Canvas = ({
   cropRef,
   resetRef,
   rescaleRef,
-  saveRef,
+  saveProps,
   styles,
 }: CanvasProps) => {
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -86,14 +91,21 @@ export const Canvas = ({
   }, [rescaleRef, handles, scaled]);
 
   useEffect(() => {
-    const handleSave = () => {
-      finalCanvasRef.current?.toDataURL();
-    };
-    if (saveRef && saveRef.current) {
-      saveRef.current.addEventListener('click', handleSave);
+    if (saveProps) {
+      const saveRef = saveProps.saveRef;
+      const handleSave = () => {
+        const imageUrl = finalCanvasRef.current?.toDataURL();
+        if (imageUrl) {
+          saveProps.saveCallback(imageUrl);
+        }
+      };
+      if (saveRef && saveRef.current) {
+        saveRef.current.addEventListener('click', handleSave);
+      }
+
+      return () => saveRef?.current?.removeEventListener('click', handleSave);
     }
-    return () => rescaleRef?.current?.removeEventListener('click', handleSave);
-  }, [saveRef]);
+  }, [saveProps]);
 
   useEffect(() => {
     const canvas = imageCanvasRef.current;
