@@ -1,28 +1,35 @@
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import './App.css';
 import { Canvas } from '.';
 
 function App() {
-  const [crop, setCrop] = useState(false);
-  const [confirm, setConfirm] = useState(false);
-  const [reset, setReset] = useState(false);
   const [url, setUrl] = useState('');
+  const [source, setSource] = useState<any>('');
   const buttonRef = useRef(null);
   const resetRef = useRef(null);
-  const confirmRef = useRef(null);
+  const rescaleRef = useRef(null);
   const saveRef = useRef(null);
   const saveCallback = (imageUrl: any) => setUrl(imageUrl);
+
+  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      if (event.target) setSource(event.target.result);
+    };
+    if (e.target.files) reader.readAsDataURL(e.target.files[0]);
+  };
+
   return (
     <div className="App">
       <Canvas
         width={500}
         height={500}
-        source="https://avatars.githubusercontent.com/u/53790951?v=4"
+        source={source}
         radius={30}
         color="red"
-        cropRef={buttonRef}
-        rescaleRef={confirmRef}
-        resetRef={resetRef}
+        cropEvent={{ elementRef: buttonRef, eventType: 'click' }}
+        rescaleEvent={{ elementRef: rescaleRef, eventType: 'click' }}
+        resetEvent={{ elementRef: resetRef, eventType: 'click' }}
         saveProps={{ saveRef, saveCallback }}
         styles={{
           border: '1px solid red',
@@ -30,15 +37,12 @@ function App() {
           alignItems: 'center',
         }}
       />
+      <input type="file" accept="image/png" onChange={(e) => handleImage(e)} />
       <button ref={buttonRef}>Crop</button>
-      <button ref={confirmRef} onClick={() => setConfirm(true)}>
-        Rescale
-      </button>
-      <button ref={resetRef} onClick={() => setReset(true)}>
-        Reset
-      </button>
+      <button ref={rescaleRef}>Rescale</button>
+      <button ref={resetRef}>Reset</button>
       <button ref={saveRef}>Save</button>
-      <div style={{ wordBreak: 'break-all' }}>{url}</div>
+      <img src={url} />
     </div>
   );
 }

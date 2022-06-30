@@ -93,7 +93,7 @@ export function redrawCropped(
     finalCanvas.width = finalWidth;
     finalCanvas.height = finalHeight;
     const finalCtx = finalCanvas.getContext('2d');
-    finalCtx!.drawImage(
+    finalCtx?.drawImage(
       cropCanvas,
       minWidth,
       minHeight,

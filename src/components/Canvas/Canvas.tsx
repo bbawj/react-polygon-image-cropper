@@ -9,6 +9,17 @@ import {
   redrawCropped,
 } from '../../utils';
 
+type CustomCallbackProps = (
+  imageCanvasRef: React.RefObject<HTMLCanvasElement>,
+  cropCanvasRef: React.RefObject<HTMLCanvasElement>,
+  finalCanvasRef: React.RefObject<HTMLCanvasElement>
+) => unknown;
+
+interface EventListenerProps {
+  elementRef: React.RefObject<HTMLElement>;
+  eventType: string;
+}
+
 interface SaveProps {
   saveRef: React.RefObject<HTMLElement>;
   saveCallback: (imageUrl: string) => any;
@@ -20,12 +31,14 @@ interface CanvasProps {
   source: string;
   radius: number;
   color: string;
+  draggable?: boolean;
   proximity?: number;
-  cropRef?: React.RefObject<HTMLElement>;
-  resetRef?: React.RefObject<HTMLElement>;
-  rescaleRef?: React.RefObject<HTMLElement>;
+  cropEvent?: EventListenerProps;
+  resetEvent?: EventListenerProps;
+  rescaleEvent?: EventListenerProps;
   saveProps?: SaveProps;
   styles?: React.CSSProperties;
+  customCallback?: CustomCallbackProps;
 }
 
 const Canvas = ({
@@ -34,32 +47,39 @@ const Canvas = ({
   source,
   radius,
   color,
+  draggable = true,
   proximity,
-  cropRef,
-  resetRef,
-  rescaleRef,
+  cropEvent,
+  resetEvent,
+  rescaleEvent,
   saveProps,
   styles,
+  customCallback,
 }: CanvasProps) => {
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const cropCanvasRef = useRef<HTMLCanvasElement>(null);
   const finalCanvasRef = useRef<HTMLCanvasElement>(null);
   const [handles, setHandles] = useState<Array<HandleProps>>([]);
-  const [draggable, setDraggable] = useState(true);
   const [cropped, setCropped] = useState(false);
   const [scaled, setScaled] = useState(false);
 
   useEffect(() => {
+    if (customCallback) {
+      customCallback(imageCanvasRef, cropCanvasRef, finalCanvasRef);
+    }
+  }, []);
+
+  useEffect(() => {
     const handleCrop = () => {
       cropImage(imageCanvasRef, cropCanvasRef, handles);
-      setDraggable(false);
       setCropped(true);
     };
+    const cropRef = cropEvent?.elementRef;
     if (cropRef && cropRef.current) {
       cropRef.current.addEventListener('click', handleCrop);
     }
     return () => cropRef?.current?.removeEventListener('click', handleCrop);
-  }, [cropRef, handles]);
+  }, [cropEvent, handles]);
 
   useEffect(() => {
     const handleReset = () => {
@@ -67,14 +87,14 @@ const Canvas = ({
       clearCanvas(finalCanvasRef);
       setHandles([]);
       setCropped(false);
-      setDraggable(true);
       setScaled(false);
     };
+    const resetRef = resetEvent?.elementRef;
     if (resetRef && resetRef.current) {
       resetRef.current.addEventListener('click', handleReset);
     }
     return () => resetRef?.current?.removeEventListener('click', handleReset);
-  }, [resetRef]);
+  }, [resetEvent]);
 
   useEffect(() => {
     const handleScale = () => {
@@ -84,11 +104,12 @@ const Canvas = ({
         setScaled(true);
       }
     };
+    const rescaleRef = rescaleEvent?.elementRef;
     if (rescaleRef && rescaleRef.current) {
       rescaleRef.current.addEventListener('click', handleScale);
     }
     return () => rescaleRef?.current?.removeEventListener('click', handleScale);
-  }, [rescaleRef, handles, scaled]);
+  }, [rescaleEvent, handles, scaled]);
 
   useEffect(() => {
     if (saveProps) {
@@ -109,43 +130,45 @@ const Canvas = ({
 
   useEffect(() => {
     const canvas = imageCanvasRef.current;
-    if (canvas !== null) {
+    if (canvas) {
       canvas.width = width * window.devicePixelRatio;
       canvas.height = height * window.devicePixelRatio;
       const context = canvas.getContext('2d');
-      const image = new Image();
-      image.onload = function () {
-        context!.imageSmoothingEnabled = false;
-        context!.drawImage(
-          image,
-          0,
-          0,
-          image.width * window.devicePixelRatio,
-          image.height * window.devicePixelRatio,
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-      };
-      image.src = source;
+      if (context) {
+        const image = new Image();
+        image.onload = function () {
+          context.imageSmoothingEnabled = false;
+          context.drawImage(
+            image,
+            0,
+            0,
+            image.width * window.devicePixelRatio,
+            image.height * window.devicePixelRatio,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+        };
+        image.src = source;
+      }
     }
 
     const handleCanvas = cropCanvasRef.current;
-    if (handleCanvas !== null) {
+    if (handleCanvas) {
       handleCanvas.width = width;
       handleCanvas.height = height;
     }
-  }, []);
+  }, [source]);
 
   useEffect(() => {
     const cropCanvas = cropCanvasRef.current;
-    if (cropCanvas !== null) {
+    if (cropCanvas) {
       const cropContext = cropCanvas.getContext('2d');
       if (cropped) {
         cropImage(imageCanvasRef, cropCanvasRef, handles);
       } else {
-        cropContext!.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+        cropContext?.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
         handles.forEach((_, idx) => drawLine(handles, idx, cropContext));
       }
     }
@@ -154,14 +177,19 @@ const Canvas = ({
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const cropCanvas = cropCanvasRef.current;
-    const rect = cropCanvas!.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    if (!checkProximity(handles, { x: x, y: y }, proximity || 0) && !cropped) {
-      setHandles((prev) => [
-        ...prev,
-        { x: x, y: y, radius: radius, color: color },
-      ]);
+    if (cropCanvas) {
+      const rect = cropCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      if (
+        !checkProximity(handles, { x: x, y: y }, proximity || 0) &&
+        !cropped
+      ) {
+        setHandles((prev) => [
+          ...prev,
+          { x: x, y: y, radius: radius, color: color },
+        ]);
+      }
     }
   };
 
@@ -194,7 +222,7 @@ const Canvas = ({
           idx={idx}
           {...handle}
           updateHandles={updateHandles}
-          draggable={true}
+          draggable={draggable}
           cropCanvasRef={cropCanvasRef}
         />
       ))}
