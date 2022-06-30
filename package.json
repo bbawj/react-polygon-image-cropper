@@ -1,6 +1,6 @@
 {
   "name": "react-polygon-image-cropper",
-  "private": true,
+  "private": false,
   "version": "0.0.1",
   "scripts": {
     "dev": "vite",
@@ -22,6 +22,7 @@
     "eslint": "^8.18.0",
     "eslint-plugin-react": "^7.30.1",
     "prettier": "2.7.1",
+    "rollup-plugin-postcss": "^4.0.2",
     "typescript": "^4.6.3",
     "vite": "^2.9.9",
     "vite-plugin-dts": "^1.2.0"
