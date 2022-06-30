@@ -22,7 +22,6 @@
     "eslint": "^8.18.0",
     "eslint-plugin-react": "^7.30.1",
     "prettier": "2.7.1",
-    "rollup-plugin-postcss": "^4.0.2",
     "typescript": "^4.6.3",
     "vite": "^2.9.9",
     "vite-plugin-dts": "^1.2.0"
@@ -37,6 +36,7 @@
     ".": {
       "import": "./dist/react-polygon-image-cropper.es.js",
       "require": "./dist/react-polygon-image-cropper.umd.js"
-    }
+    },
+    "./dist/style.css": "./dist/style.css"
   }
 }
