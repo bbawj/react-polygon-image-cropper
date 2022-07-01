@@ -1,12 +1,19 @@
 {
   "name": "react-polygon-image-cropper",
   "private": false,
-  "version": "0.0.1",
+  "version": "0.0.3",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
+  "keywords": [
+    "react",
+    "typescript",
+    "polygon",
+    "image",
+    "cropper"
+  ],
   "author": "Brendan Ang",
   "dependencies": {
     "react": "^18.0.0",
@@ -38,5 +45,9 @@
       "require": "./dist/react-polygon-image-cropper.umd.js"
     },
     "./dist/style.css": "./dist/style.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bbawj/react-polygon-image-cropper.git"
   }
 }
