@@ -82,3 +82,8 @@ function App() {
 |     styles     |                                                                       React.CSSProperties                                                                      |   false  | Used to style the bounding <div> box for the canvases                                                                                              |
 | customCallback | [CustomCallbackProps](https://github.com/bbawj/react-polygon-image-cropper/blob/144f67d42e8de666ab49fd0b65d874536ef5434e/src/components/Canvas/Canvas.tsx#L12) |   false  | Passes the React.RefObject for all 3 canvases to be used in custom logic                                                                           |
 
+## How to contribute
+
+1. Clone the repository.
+   You can run the local example with: `npm run dev`
+2. Create a new branch for your new pull request
